@@ -1,38 +1,45 @@
 <script setup>
-  import {ref} from 'vue';
+  import { ref, provide, watch } from 'vue';
   import StudentsList from './components/StudentsList.vue';
-  const infor =ref([
-    {
-      nganh:'CNTT',
-      lops:[
-        {lop:'CN01',students:[{name:'Phan Mạnh Cường',age:20}]}
-      ]
-    },
-    {
-      nganh:'CNDPT',
-      lops:[
-        {lop:'PT01',students:[{name:'Lê Quốc Dũng',age:20}]}
-      ]
-    }
-  ])
-  let currentIndex=1;
+  import AddStudent from './components/AddStudents.vue';
+  import ClassList from './components/ClassList.vue'
+  import AddClass from './components/AddClass.vue';
+  const infor = ref([
+    { nganh: 'CNTT', lops: [{ lop: 'CN01', students: [{ name: 'Phan Mạnh Cường', age: 20 }] }] },
+    { nganh: 'CNDPT', lops: [{ lop: 'PT01', students: [{ name: 'Lê Quốc Dũng', age: 20 }] }] }
+  ]);
+  if (localStorage.getItem('inforData')) {
+    infor.value = JSON.parse(localStorage.getItem('inforData'));
+  }
+  provide('inforall', infor);
+  const currentscreen = ref('dsachhocsinh');
+  provide('CurrentScreenAll', currentscreen);
+  const keyword = ref('');
+  watch(infor, (newValue) => {
+    localStorage.setItem('inforData', JSON.stringify(newValue));
+  });
 </script>
 <template>
-  <table border="1">
-    <thead>
-      <tr>
-        <th>STT</th>
-        <th>Họ Và Tên</th>
-        <th>Lớp</th>
-        <th>Thao Tác/Xóa</th>
-      </tr>
-    </thead>
-    <tbody>
-      <template v-for="(nganh, index) in infor" :key="index">
-        <template v-for="(lop, index1) in nganh.lops" :key="index1">
-          <StudentsList :lopName="lop.lop" :students="lop.students" :nganhindex="index" :lopindex="index1"/>
-        </template>  
-      </template>
-    </tbody>
-  </table>
+  <StudentsList v-if="currentscreen === 'dsachhocsinh'"></StudentsList>
+  <AddStudent v-if="currentscreen === 'themhocsinh'"></AddStudent>
+  <ClassList v-if="currentscreen==='dslop'"></ClassList>
+  <AddClass v-if="currentscreen==='themlop'"></AddClass>
+  <template v-if="currentscreen==='dsachhocsinh'">
+    <input v-model="keyword" placeholder="Tìm học sinh" />
+    <table border="1" v-if="keyword">
+      <thead>
+        <tr><th>STT</th><th>Họ tên</th><th>Tuổi</th><th>Lớp</th><th>Ngành</th></tr>
+      </thead>
+      <tbody>
+        <tr v-for="(nganh, nganhIndex) in infor" :key="nganhIndex">
+          <tr v-for="(lop, lopIndex) in nganh.lops" :key="lopIndex">
+            <tr v-for="(student, studentIndex) in lop.students" :key="studentIndex" v-if="student.name.toLowerCase().includes(keyword.toLowerCase())">
+              <td>{{ nganhIndex+1 }}.{{ lopIndex+1 }}.{{ studentIndex+1 }}</td>
+              <td>{{ student.name }}</td><td>{{ student.age }}</td><td>{{ lop.lop }}</td><td>{{ nganh.nganh }}</td>
+            </tr>
+          </tr>
+        </tr>
+      </tbody>
+    </table>
+  </template>
 </template>
